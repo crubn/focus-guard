@@ -1,0 +1,31 @@
+# Virtual env
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# IDE / editor
+.idea/
+.vscode/
+.cursor/
+
+# MediaPipe model (downloaded at first run)
+focus_guard/models/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

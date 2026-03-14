@@ -1,0 +1,9 @@
+# Focus Guard - Anti-scroll when not looking at screen
+# Python 3.11+
+
+opencv-python>=4.8.0
+mediapipe>=0.10.0
+numpy>=1.24.0
+pynput>=1.7.6
+# Optional: play WAV for look-away alert (fallback: system beep without it)
+# playsound>=1.3.0
