@@ -340,7 +340,7 @@ def run(
         reminder_image = load_reminder_image(frame_w, frame_h) if reminder_video_cap is None else None
         run_start = time.perf_counter()
         show_reminder_seconds = 3.0  # первые N секунд всегда показывать напоминание при старте
-        eyes_closed_seconds = 1.0  # если глаза закрыты дольше — показываем напоминание
+        eyes_closed_seconds = 2.0  # если глаза закрыты дольше — показываем напоминание
         eyes_closed_start_time = None
         eyes_closed_trigger = False
         eyes_closed_frames = 0  # сколько кадров подряд глаза закрыты (для защиты от моргания)
