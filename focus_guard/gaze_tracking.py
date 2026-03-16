@@ -12,6 +12,7 @@ from focus_guard.utils import (
     PITCH_LOOK_UP_THRESHOLD,
     YAW_LOOK_AWAY_THRESHOLD,
     GAZE_SMOOTHING_ALPHA,
+    INVERT_GAZE,
 )
 
 
@@ -31,7 +32,8 @@ class GazeTracker:
         Update gaze state from current face landmarks. Returns GazeState.
         """
         if face is None:
-            # No face: treat as looking away
+            # Нет лица — считаем «в сторону» и сбрасываем сглаживание, чтобы при появлении лица реакция была быстрой
+            self.reset_smoothing()
             return GazeState.LOOKING_AWAY
 
         nose_x, nose_y = face.nose_tip_normalized()
@@ -57,12 +59,20 @@ class GazeTracker:
         p = self._smoothed_pitch
         y = self._smoothed_yaw
 
-        # Classify: down (phone) = nose low in frame; away = nose left/right of center
+        # Classify: down = нос низко; away = нос в сторону от центра
         if p > PITCH_LOOK_DOWN_THRESHOLD:
-            return GazeState.LOOKING_DOWN
-        if abs(y) > YAW_LOOK_AWAY_THRESHOLD:
-            return GazeState.LOOKING_AWAY
-        return GazeState.AT_SCREEN
+            state = GazeState.LOOKING_DOWN
+        elif abs(y) > YAW_LOOK_AWAY_THRESHOLD:
+            state = GazeState.LOOKING_AWAY
+        else:
+            state = GazeState.AT_SCREEN
+
+        # Если камера показывала видео при взгляде в неё — инвертируем (utils.INVERT_GAZE = True)
+        if INVERT_GAZE:
+            if state == GazeState.AT_SCREEN:
+                return GazeState.LOOKING_AWAY
+            return GazeState.AT_SCREEN
+        return state
 
     def reset_smoothing(self) -> None:
         """Reset smoothed values (e.g. when face is lost)."""

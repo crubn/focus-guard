@@ -6,6 +6,7 @@ Or: python focus_guard/main.py (from repo root so focus_guard is a package)
 """
 
 import argparse
+import platform
 import subprocess
 import sys
 import threading
@@ -33,6 +34,7 @@ from focus_guard.utils import (
     GazeState,
     FRAME_DELAY_MS,
     LOOK_AWAY_ALERT_SECONDS,
+    EYES_CLOSED_CONSECUTIVE_FRAMES,
 )
 
 
@@ -338,9 +340,10 @@ def run(
         reminder_image = load_reminder_image(frame_w, frame_h) if reminder_video_cap is None else None
         run_start = time.perf_counter()
         show_reminder_seconds = 3.0  # первые N секунд всегда показывать напоминание при старте
-        eyes_closed_seconds = 3.0  # если глаза закрыты дольше — показываем напоминание
+        eyes_closed_seconds = 1.0  # если глаза закрыты дольше — показываем напоминание
         eyes_closed_start_time = None
         eyes_closed_trigger = False
+        eyes_closed_frames = 0  # сколько кадров подряд глаза закрыты (для защиты от моргания)
 
         while True:
             ret, frame = camera.read()
@@ -348,17 +351,25 @@ def run(
                 time.sleep(0.05)
                 continue
 
+            # Делаем изображение с камеры незеркальным (переворот по горизонтали один раз).
+            # Это не влияет на видео-напоминание, оно отображается как есть.
+            frame = cv2.flip(frame, 1)
+
             face = eye_detector.process(frame)
             gaze = gaze_tracker.update(face)
             focus = focus_logic.update(gaze)
 
-            # Закрыты ли глаза дольше N секунд — тогда тоже показываем напоминание
+            # Закрыты ли глаза дольше N секунд — тогда тоже показываем напоминание.
+            # Дополнительно требуем несколько подряд кадров «глаза закрыты», чтобы не реагировать на обычное моргание.
             if are_eyes_closed(face):
-                if eyes_closed_start_time is None:
-                    eyes_closed_start_time = time.perf_counter()
-                elif (time.perf_counter() - eyes_closed_start_time) >= eyes_closed_seconds:
-                    eyes_closed_trigger = True
+                eyes_closed_frames += 1
+                if eyes_closed_frames >= max(1, EYES_CLOSED_CONSECUTIVE_FRAMES):
+                    if eyes_closed_start_time is None:
+                        eyes_closed_start_time = time.perf_counter()
+                    elif (time.perf_counter() - eyes_closed_start_time) >= eyes_closed_seconds:
+                        eyes_closed_trigger = True
             else:
+                eyes_closed_frames = 0
                 eyes_closed_start_time = None
                 eyes_closed_trigger = False
 
@@ -437,11 +448,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Focus Guard: block/reverse scroll when not looking at the screen."
     )
+    # На macOS индекс 0 часто — Continuity Camera (iPhone), 1 — встроенная камера MacBook
+    _default_camera = 1 if platform.system() == "Darwin" else 0
     parser.add_argument(
         "--camera",
         type=int,
-        default=0,
-        help="Webcam device index (default: 0)",
+        default=_default_camera,
+        help="Webcam device index (on macOS default=1 to use built-in camera, not iPhone)",
     )
     parser.add_argument(
         "--block-only",

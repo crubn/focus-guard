@@ -17,20 +17,28 @@ FACE_LANDMARKER_MODEL_URL = (
 # Gaze / focus constants
 # -----------------------------------------------------------------------------
 
-# «Смотрю в камеру» = показываем камеру; «смотрю в сторону/вниз» = показываем видео.
-# Пороги задают зону «в камеру»: голова не слишком опущена и не сильно повёрнута вбок.
-PITCH_LOOK_DOWN_THRESHOLD = 0.58   # nose_y выше = «в камеру», ниже = смотрим вниз (телефон)
-PITCH_LOOK_UP_THRESHOLD = 0.45     # (не используется в классификации, оставлен для совместимости)
-YAW_LOOK_AWAY_THRESHOLD = 0.38     # |нос - центр| выше = смотрим в сторону
+# «Смотрю в камеру» = камера; «смотрю в сторону/вниз/глаза закрыты» = видео.
+# Если у тебя наоборот (при взгляде в камеру играет видео) — поставь INVERT_GAZE = True.
+INVERT_GAZE = True
 
-# How much to smooth gaze state (0 = no smoothing, 1 = max smoothing)
-GAZE_SMOOTHING_ALPHA = 0.25
+PITCH_LOOK_DOWN_THRESHOLD = 0.55   # нос ниже = смотрим вниз (чуть чувствительнее)
+PITCH_LOOK_UP_THRESHOLD = 0.45
+YAW_LOOK_AWAY_THRESHOLD = 0.35     # нос в сторону от центра (чуть чувствительнее)
+
+# Сглаживание взгляда: больше = быстрее реакция (0.55 ≈ 2–3 кадра), меньше = плавнее но медленнее
+GAZE_SMOOTHING_ALPHA = 0.55
+
+# Сколько кадров подряд нужно для смены фокуса (1 = без гистерезиса, 2 = меньше мерцания)
+FOCUS_HYSTERESIS_FRAMES = 2
+
+# Сколько кадров подряд «глаза закрыты» перед стартом таймера 3 сек (защита от моргания)
+EYES_CLOSED_CONSECUTIVE_FRAMES = 2
 
 # Seconds looking away before playing alert sound
 LOOK_AWAY_ALERT_SECONDS = 5.0
 
-# Target FPS for the main loop
-TARGET_FPS = 25
+# Target FPS for the main loop (выше = отзывчивее)
+TARGET_FPS = 30
 FRAME_DELAY_MS = int(1000 / TARGET_FPS)
 
 
