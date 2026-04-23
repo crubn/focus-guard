@@ -60,21 +60,5 @@ class GazeTracker:
         y = self._smoothed_yaw
 
         # Classify: down = нос низко; away = нос в сторону от центра
-        if p > PITCH_LOOK_DOWN_THRESHOLD:
-            state = GazeState.LOOKING_DOWN
-        elif abs(y) > YAW_LOOK_AWAY_THRESHOLD:
-            state = GazeState.LOOKING_AWAY
-        else:
-            state = GazeState.AT_SCREEN
 
-        # Если камера показывала видео при взгляде в неё — инвертируем (utils.INVERT_GAZE = True)
-        if INVERT_GAZE:
-            if state == GazeState.AT_SCREEN:
-                return GazeState.LOOKING_AWAY
-            return GazeState.AT_SCREEN
-        return state
 
-    def reset_smoothing(self) -> None:
-        """Reset smoothed values (e.g. when face is lost)."""
-        self._smoothed_pitch = None
-        self._smoothed_yaw = None
